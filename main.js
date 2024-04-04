@@ -109,9 +109,9 @@ class Body{
 
 const b = new Array();
 const t = new Array();
-const colors = Array(new THREE.LineBasicMaterial( { color: 0x8888ff, transparent: true, opacity: .8 } ), 
-					 new THREE.LineBasicMaterial( { color: 0x88ff88, transparent: true, opacity: .8 } ),
-					 new THREE.LineBasicMaterial( { color: 0xff8888, transparent: true, opacity: .8 } ))
+const colors = Array(new THREE.LineBasicMaterial( { color: 0x8888ff, transparent: true, opacity: .9 } ), 
+					 new THREE.LineBasicMaterial( { color: 0x88ff88, transparent: true, opacity: .9 } ),
+					 new THREE.LineBasicMaterial( { color: 0xff8888, transparent: true, opacity: .9 } ))
 
 function bodyMake(body){
 	for(let i=0; i<n; i++){
@@ -223,3 +223,5 @@ function trailControl(){
 		scene.children[i+n].geometry.setFromPoints(t[i].pos);
 	}
 }
+
+animate();
