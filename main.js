@@ -1,0 +1,225 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import Stats from 'stats-js'
+
+const n = 3;
+
+const scene = new THREE.Scene(); 
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); 
+const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: "high-performance"}); 
+
+const controller = {
+	1: {pressed: false}, //+x
+	2: {pressed: false}, //-x
+	3: {pressed: false}, //+y
+	4: {pressed: false}, //-y
+	5: {pressed: false}, //+z
+	6: {pressed: false}, //-z
+}
+
+document.addEventListener("keydown", (e) => {
+	if(e.key == "ArrowRight"){
+		controller[1].pressed = true;
+	}
+	if(e.key == "ArrowLeft"){
+		controller[2].pressed = true;
+	}
+	if(e.key == "ArrowUp"){
+		controller[3].pressed = true;
+	}
+	if(e.key == "ArrowDown"){
+		controller[4].pressed = true;
+	}
+	if(e.key == "Shift"){
+		controller[5].pressed = true;
+	}
+	if(e.key == "Enter"){
+		controller[6].pressed = true;
+	}
+	if(e.key == " "){
+		animate();
+	}
+});
+document.addEventListener("keyup", (e) => {
+	if(e.key == "ArrowRight"){
+		controller[1].pressed = false;
+	}
+	if(e.key == "ArrowLeft"){
+		controller[2].pressed = false;
+	}
+	if(e.key == "ArrowUp"){
+		controller[3].pressed = false;
+	}
+	if(e.key == "ArrowDown"){
+		controller[4].pressed = false;
+	}
+	if(e.key == "Shift"){
+		controller[5].pressed = false;
+	}
+	if(e.key == "Enter"){
+		controller[6].pressed = false;
+	}
+});
+
+// FPS tracker
+var stats = new Stats();
+stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
+
+renderer.setSize(window.innerWidth, window.innerHeight); 
+document.body.appendChild(renderer.domElement); 
+
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+
+renderer.setPixelRatio(window.devicePixelRatio);
+
+// const loader = new THREE.TextureLoader();
+// const texture = loader.load(
+//   'starmap.png',
+//   () => {
+// 	texture.mapping = THREE.EquirectangularReflectionMapping;
+// 	texture.colorSpace = THREE.SRGBColorSpace;
+// 	scene.background = texture;
+//   });
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.update();
+// console.log(controls.target);
+// const move = camera.position.add(new THREE.Vector3(0,0,15))
+// controls.target = move;
+
+
+class Trail{
+	constructor(pos, line){
+		this.pos = pos;
+		this.line = line;
+	}
+}
+
+class Body{
+	constructor(m, s, v, obj){
+		this.m = m;
+		this.s = new THREE.Vector3().copy(s);
+		this.v = new THREE.Vector3().copy(v);
+		this.obj = obj;
+	}
+}
+
+const b = new Array();
+const t = new Array();
+const colors = Array(new THREE.LineBasicMaterial( { color: 0x8888ff, transparent: true, opacity: .8 } ), 
+					 new THREE.LineBasicMaterial( { color: 0x88ff88, transparent: true, opacity: .8 } ),
+					 new THREE.LineBasicMaterial( { color: 0xff8888, transparent: true, opacity: .8 } ))
+
+function bodyMake(body){
+	for(let i=0; i<n; i++){
+		b.push(new Body(1, 
+			new THREE.Vector3(5*i,0,0), 
+			new THREE.Vector3(), 
+			new THREE.Mesh(new THREE.SphereGeometry(.25,8,8), new THREE.MeshLambertMaterial({ color: 0xffffff }))));
+		b[i].obj.receiveShadow = true;
+		b[i].obj.castShadow = true;
+		b[i].obj.position.copy(b[i].s);
+		scene.add(b[i].obj);
+	}
+	camera.position.x = 5*(n-1)/2;
+}
+
+function trailMake(){
+	for(let i=0; i<n; i++){
+		t.push(new Trail(new Array(new THREE.Vector3().copy(b[i].s)),
+			new THREE.Line(new THREE.BufferGeometry(), colors[i%3])));
+		t[i].line.geometry.setFromPoints(t[i].pos);
+		t[i].line.frustumCulled = false;
+		scene.add(t[i].line);
+	}
+}
+
+bodyMake();
+trailMake();
+
+
+
+//Create a DirectionalLight and turn on shadows for the light
+const light = new THREE.DirectionalLight( 0xffffff, 1 );
+light.position.set( 0, 2, 5 ); //default; light shining from top
+light.castShadow = true; // default false
+scene.add( light );
+
+const light2 = new THREE.AmbientLight( 0x404040 ); // soft white light 
+scene.add( light2 );
+
+
+//Set up shadow properties for the light
+light.shadow.mapSize.width = 512; // default
+light.shadow.mapSize.height = 512; // default
+light.shadow.camera.near = 0.5; // default
+light.shadow.camera.far = 500; // default
+
+scene.add(camera);
+camera.position.z = 15; 
+
+function animate() { 
+	requestAnimationFrame(animate); 
+	stats.begin();
+	physics();
+	cameraControl();
+	trailControl();
+    // console.log(b[1].v);
+	stats.end();
+	renderer.render(scene, camera); 
+}            
+
+b[0].v.y = 0.1;
+b[0].v.z = 0.1;
+// b[1].m = 20;
+b[2].v.y = -0.1;
+b[2].v.x = -0.1;
+function physics(){
+    for(let i=0; i<n; i++){
+		b[i].obj.position.add(b[i].v);
+	}
+	for(let i=0; i<n; i++){
+		b[i].v.add(grav(i).multiplyScalar(1/(20*b[i].m)));
+    }
+}
+
+function grav(o){
+	let force = new THREE.Vector3();
+	for(let i=0; i<n; i++){
+		if(i!=o){
+			let o0 = new THREE.Vector3().copy(b[o].obj.position);
+			let o1 = new THREE.Vector3().copy(b[i].obj.position);
+			b[o].s.copy(b[o].obj.position);
+			b[i].s.copy(b[i].obj.position);
+
+			force.add(o1.add(o0.negate()).normalize().multiplyScalar(b[0].m*b[i].m/b[o].s.distanceToSquared(b[i].s)));
+		}
+	}
+	return force;
+}
+
+const lm = new THREE.Vector3();
+for(let i=0; i<n; i++){
+	lm.add(b[i].v);
+}
+lm.multiplyScalar(1/n)
+function cameraControl(){
+// 	// controls.target.add(lm);
+	// for(let i=0; i<n-1; i++){
+		controls.target.add(lm);
+		camera.position.add(lm);
+	// }
+// console.log(controls.target);
+// console.log(move);
+
+}
+
+function trailControl(){
+	for(let i=0; i<n; i++){
+		t[i].pos.unshift(new THREE.Vector3().copy(b[i].obj.position));
+		scene.children[i+n].geometry.setFromPoints(t[i].pos);
+	}
+}

@@ -1,0 +1,19 @@
+{
+  "name": "three-body",
+  "version": "1.0.0",
+  "description": "A web-based 3D gravitation sim",
+  "main": "index.html",
+  "scripts": {
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "author": "drasimov",
+  "license": "MIT",
+  "dependencies": {
+    "stats-js": "^1.0.1",
+    "three": "^0.163.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
+  }
+}
