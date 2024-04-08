@@ -37,7 +37,7 @@ document.addEventListener("keydown", (e) => {
 		controller[6].pressed = true;
 	}
 	if(e.key == " "){
-		animate();
+		toggleWork();
 	}
 });
 document.addEventListener("keyup", (e) => {
@@ -64,7 +64,8 @@ document.addEventListener("keyup", (e) => {
 // FPS tracker
 var stats = new Stats();
 stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild( stats.dom );
+document.getElementById("stats").appendChild( stats.dom );
+stats.dom.style.position = "relative";
 
 renderer.setSize(window.innerWidth, window.innerHeight); 
 document.body.appendChild(renderer.domElement); 
@@ -74,22 +75,19 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 renderer.setPixelRatio(window.devicePixelRatio);
 
-// const loader = new THREE.TextureLoader();
-// const texture = loader.load(
-//   'starmap.png',
-//   () => {
-// 	texture.mapping = THREE.EquirectangularReflectionMapping;
-// 	texture.colorSpace = THREE.SRGBColorSpace;
-// 	scene.background = texture;
-//   });
+const loader = new THREE.TextureLoader();
+const stars = loader.load(
+  'test/starmap.png',
+  () => {
+	stars.mapping = THREE.EquirectangularReflectionMapping;
+	stars.colorSpace = THREE.SRGBColorSpace;
+	scene.background = stars;
+});
+const dark = new THREE.Color(0,0,0);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0, 0);
 controls.update();
-// console.log(controls.target);
-// const move = camera.position.add(new THREE.Vector3(0,0,15))
-// controls.target = move;
-
 
 class Trail{
 	constructor(pos, line){
@@ -99,11 +97,12 @@ class Trail{
 }
 
 class Body{
-	constructor(m, s, v, obj){
+	constructor(m, s, v, obj, test){
 		this.m = m;
 		this.s = new THREE.Vector3().copy(s);
 		this.v = new THREE.Vector3().copy(v);
 		this.obj = obj;
+		this.test = test;
 	}
 }
 
@@ -111,19 +110,26 @@ const b = new Array();
 const t = new Array();
 const colors = Array(new THREE.LineBasicMaterial( { color: 0x8888ff, transparent: true, opacity: .9 } ), 
 					 new THREE.LineBasicMaterial( { color: 0x88ff88, transparent: true, opacity: .9 } ),
-					 new THREE.LineBasicMaterial( { color: 0xff8888, transparent: true, opacity: .9 } ))
+					 new THREE.LineBasicMaterial( { color: 0xff8888, transparent: true, opacity: .9 } ));
+const sphereGeos = new Array(new THREE.SphereGeometry(.25,8,8), 
+							 new THREE.SphereGeometry(.05,8,8));
+const sphereMats = Array(new THREE.MeshLambertMaterial( { color: 0xddddff, transparent: true, opacity: .9 } ), 
+						 new THREE.MeshLambertMaterial( { color: 0xddffdd, transparent: true, opacity: .9 } ),
+						 new THREE.MeshLambertMaterial( { color: 0xffdddd, transparent: true, opacity: .9 } ));
 
-function bodyMake(body){
+function bodyMake(){
 	for(let i=0; i<n; i++){
 		b.push(new Body(1, 
 			new THREE.Vector3(5*i,0,0), 
 			new THREE.Vector3(), 
-			new THREE.Mesh(new THREE.SphereGeometry(.25,8,8), new THREE.MeshLambertMaterial({ color: 0xffffff }))));
+			new THREE.Mesh(sphereGeos[0], sphereMats[i%3]),
+			false));
 		b[i].obj.receiveShadow = true;
 		b[i].obj.castShadow = true;
 		b[i].obj.position.copy(b[i].s);
 		scene.add(b[i].obj);
 	}
+	controls.target.x = 5*(n-1)/2;
 	camera.position.x = 5*(n-1)/2;
 }
 
@@ -164,17 +170,19 @@ camera.position.z = 15;
 function animate() { 
 	requestAnimationFrame(animate); 
 	stats.begin();
-	physics();
-	cameraControl();
-	trailControl();
-    // console.log(b[1].v);
+	if(work){
+		physics();
+		cameraControl();
+		trailControl();
+		if(testing){ testMass();}
+	}
 	stats.end();
 	renderer.render(scene, camera); 
 }            
 
 b[0].v.y = 0.1;
 b[0].v.z = 0.1;
-// b[1].m = 20;
+// b[1].m = 1.5;
 b[2].v.y = -0.1;
 b[2].v.x = -0.1;
 function physics(){
@@ -189,32 +197,30 @@ function physics(){
 function grav(o){
 	let force = new THREE.Vector3();
 	for(let i=0; i<n; i++){
-		if(i!=o){
+		if(i!=o && !b[o].test){
 			let o0 = new THREE.Vector3().copy(b[o].obj.position);
 			let o1 = new THREE.Vector3().copy(b[i].obj.position);
 			b[o].s.copy(b[o].obj.position);
 			b[i].s.copy(b[i].obj.position);
 
-			force.add(o1.add(o0.negate()).normalize().multiplyScalar(b[0].m*b[i].m/b[o].s.distanceToSquared(b[i].s)));
+			force.add(o1.add(o0.negate()).normalize().multiplyScalar(b[o].m*b[i].m/(b[o].s.distanceToSquared(b[i].s))));
 		}
 	}
 	return force;
 }
 
 const lm = new THREE.Vector3();
+let com = 0;
+let vcom = new THREE.Vector3();
 for(let i=0; i<n; i++){
-	lm.add(b[i].v);
+	vcom.copy(b[i].v);
+	lm.add(vcom.multiplyScalar(b[i].m));
+	com += b[i].m;
 }
-lm.multiplyScalar(1/n)
+lm.multiplyScalar(1/com)
 function cameraControl(){
-// 	// controls.target.add(lm);
-	// for(let i=0; i<n-1; i++){
-		controls.target.add(lm);
-		camera.position.add(lm);
-	// }
-// console.log(controls.target);
-// console.log(move);
-
+	controls.target.add(lm);
+	camera.position.add(lm);
 }
 
 function trailControl(){
@@ -224,4 +230,84 @@ function trailControl(){
 	}
 }
 
-animate();
+let work = false;
+let creative = true;
+let showT = true;
+let showO = true;
+let showB = true;
+let showPS = false;
+
+document.getElementById("begin").addEventListener("click", run);
+document.getElementById("b-s").addEventListener("click", toggleWork);
+document.getElementById("b-t").addEventListener("click", toggleTrails);
+document.getElementById("b-o").addEventListener("click", toggleObjects);
+document.getElementById("b-b").addEventListener("click", toggleBkg);
+document.getElementById("b-tm").addEventListener("click", addTestMass);
+document.getElementById("b-ps").addEventListener("click", toggleSetter);
+document.getElementById("setter").style.display = "none";
+function run(){
+	if(creative){
+		document.getElementById("begin").style.opacity = 0;
+		document.getElementById("control-panel").style.opacity = 1;
+		setTimeout(animate, 1000);
+		setTimeout(hide, 1000);
+		creative = false;
+	}
+}
+function hide(){
+	document.getElementById("begin").style.display = "none";
+}
+function toggleWork(){ work = !work; }
+function toggleTrails(){ 
+	showT = !showT;
+	for(let i=n; i<2*n; i++){
+		scene.children[i].visible = showT;
+	}
+ }
+ function toggleObjects(){ 
+	showO = !showO;
+	for(let i=0; i<n; i++){
+		scene.children[i].visible = showO;
+	}
+ }
+ function toggleBkg(){
+	showB = !showB;
+	scene.background = showB ? stars : dark;
+ }
+ function toggleSetter(){
+	showPS = !showPS;
+	document.getElementById("setter").style.display = showPS ? "block":"none";
+ }
+
+ let testIndex = b.length;
+ let testing = false;
+ function addTestMass(){
+	testing = true;
+	b.push(new Body(1, 
+		new THREE.Vector3(-5,0,0), 
+		new THREE.Vector3(0,0.05,0.05), 
+		new THREE.Mesh(sphereGeos[1], new THREE.MeshLambertMaterial( { color: 0xffffff, transparent: true, opacity: 1 } ),
+		true)));
+	b[b.length-1].obj.position.copy(b[b.length-1].s);
+	scene.add(b[b.length-1].obj);
+
+	t.push(new Trail(new Array(new THREE.Vector3().copy(b[b.length-1].s)),
+		new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial( { color: 0xffffff, transparent: true, opacity: .25 }))));
+	t[t.length-1].line.geometry.setFromPoints(t[t.length-1].pos);
+	t[t.length-1].line.frustumCulled = false;
+	scene.add(t[t.length-1].line);
+ }
+
+ function testMass(){
+	b[testIndex].obj.position.add(b[testIndex].v);
+	b[testIndex].v.add(grav(testIndex).multiplyScalar(1/(20*b[testIndex].m)));
+
+	t[testIndex].pos.unshift(new THREE.Vector3().copy(b[testIndex].obj.position));
+	scene.children[scene.children.length-1].geometry.setFromPoints(t[testIndex].pos);
+ }
+
+// TODO:
+// keyboard flying around
+// better test masses
+// user input
+// more optimization
