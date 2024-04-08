@@ -77,7 +77,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 
 const loader = new THREE.TextureLoader();
 const stars = loader.load(
-  'test/starmap.png',
+  '/starmap.png',
   () => {
 	stars.mapping = THREE.EquirectangularReflectionMapping;
 	stars.colorSpace = THREE.SRGBColorSpace;
