@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'stats-js'
-import starmap from './starmap.png'
+import starmap from '/starmap.png'
 
 const n = 3;
 
