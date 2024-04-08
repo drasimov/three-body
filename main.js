@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'stats-js'
+import starmap from './starmap.png'
 
 const n = 3;
 
@@ -77,7 +78,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 
 const loader = new THREE.TextureLoader();
 const stars = loader.load(
-  '/starmap.png',
+  starmap,
   () => {
 	stars.mapping = THREE.EquirectangularReflectionMapping;
 	stars.colorSpace = THREE.SRGBColorSpace;
