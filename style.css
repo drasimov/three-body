@@ -70,6 +70,8 @@ canvas{
     transition: opacity .2s;
     margin: 0;
     padding: 0;
+    margin-left: 8px;
+
 }
 .slider::-webkit-slider-thumb {
     appearance: none;
@@ -81,15 +83,36 @@ canvas{
 .number{
     position: absolute;
     right:0; 
-    top: 5px;
+    top: 6px;
     width: 20px;
     margin: 0;
     padding: 0;
     background: rgba(0,0,0,0);
-    border: 1px solid #00FFFF;
 }
 /* Mouse-over effects */
 .slider:hover {
     opacity: 1; /* Fully shown on mouse-over */
 }
+
+.slider-wrap .m-l{
+    position: absolute; 
+    left: 0;
+    top: 5px;
+    z-index: 99;
+    opacity: .8;
+}
+
+.col-0{
+    color: #DDDDFF;
+}
+
+.col-1{
+    color: #DDFFDD;
+}
+
+
+.col-2{
+    color: #FFDDDD;
+}
+
 

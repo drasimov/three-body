@@ -65,7 +65,7 @@ document.addEventListener("keyup", (e) => {
 // FPS tracker
 var stats = new Stats();
 stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.getElementById("stats").appendChild( stats.dom );
+$("stats").appendChild( stats.dom );
 stats.dom.style.position = "relative";
 
 renderer.setSize(window.innerWidth, window.innerHeight); 
@@ -238,25 +238,25 @@ let showO = true;
 let showB = true;
 let showPS = false;
 
-document.getElementById("begin").addEventListener("click", run);
-document.getElementById("b-s").addEventListener("click", toggleWork);
-document.getElementById("b-t").addEventListener("click", toggleTrails);
-document.getElementById("b-o").addEventListener("click", toggleObjects);
-document.getElementById("b-b").addEventListener("click", toggleBkg);
-document.getElementById("b-tm").addEventListener("click", addTestMass);
-document.getElementById("b-ps").addEventListener("click", toggleSetter);
-document.getElementById("setter").style.display = "none";
+$("begin").addEventListener("click", run);
+$("b-s").addEventListener("click", toggleWork);
+$("b-t").addEventListener("click", toggleTrails);
+$("b-o").addEventListener("click", toggleObjects);
+$("b-b").addEventListener("click", toggleBkg);
+$("b-tm").addEventListener("click", addTestMass);
+$("b-ps").addEventListener("click", toggleSetter);
+$("setter").style.display = "none";
 function run(){
 	if(creative){
-		document.getElementById("begin").style.opacity = 0;
-		document.getElementById("control-panel").style.opacity = 1;
+		$("begin").style.opacity = 0;
+		$("control-panel").style.opacity = 1;
 		setTimeout(animate, 1000);
 		setTimeout(hide, 1000);
 		creative = false;
 	}
 }
 function hide(){
-	document.getElementById("begin").style.display = "none";
+	$("begin").style.display = "none";
 }
 function toggleWork(){ work = !work; }
 function toggleTrails(){ 
@@ -264,25 +264,25 @@ function toggleTrails(){
 	for(let i=n; i<2*n; i++){
 		scene.children[i].visible = showT;
 	}
- }
- function toggleObjects(){ 
+}
+function toggleObjects(){ 
 	showO = !showO;
 	for(let i=0; i<n; i++){
 		scene.children[i].visible = showO;
 	}
- }
- function toggleBkg(){
+}
+function toggleBkg(){
 	showB = !showB;
 	scene.background = showB ? stars : dark;
- }
- function toggleSetter(){
+}
+function toggleSetter(){
 	showPS = !showPS;
-	document.getElementById("setter").style.display = showPS ? "block":"none";
- }
+	$("setter").style.display = showPS ? "block":"none";
+}
 
- let testIndex = b.length;
- let testing = false;
- function addTestMass(){
+let testIndex = b.length;
+let testing = false;
+function addTestMass(){
 	testing = true;
 	b.push(new Body(1, 
 		new THREE.Vector3(-5,0,0), 
@@ -297,15 +297,33 @@ function toggleTrails(){
 	t[t.length-1].line.geometry.setFromPoints(t[t.length-1].pos);
 	t[t.length-1].line.frustumCulled = false;
 	scene.add(t[t.length-1].line);
- }
+}
 
- function testMass(){
+function testMass(){
 	b[testIndex].obj.position.add(b[testIndex].v);
 	b[testIndex].v.add(grav(testIndex).multiplyScalar(1/(20*b[testIndex].m)));
 
 	t[testIndex].pos.unshift(new THREE.Vector3().copy(b[testIndex].obj.position));
 	scene.children[scene.children.length-1].geometry.setFromPoints(t[testIndex].pos);
- }
+}
+
+
+function genSlider(i){
+	$("setter").innerHTML += `<div class="slider-wrap"><span class = "m-l l col-${i%3}">m<sub>${i+1}</sub></span><input type="range" min="0.1" max="9.9" step = "0.1" value="1" class="slider" id="input-s-${i}"><span id = "input-n-${i}" class = "number l col-${i%3}">1.0</span></div>`;
+
+}
+
+for(let i=0; i<n; i++){
+	genSlider(i);
+}  
+for(let i=0; i<n; i++){
+	$(`input-s-${i}`).addEventListener("input", function(){ $(`input-n-${i}`).innerHTML = Number($(`input-s-${i}`).value).toFixed(1); b[i].m = Number($(`input-s-${i}`).value)});
+}  
+
+
+function $(x){
+	return document.getElementById(x);
+}
 
 // TODO:
 // keyboard flying around
