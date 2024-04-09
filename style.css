@@ -30,7 +30,7 @@ canvas{
     bottom:5px;
     right:5px;
     padding: 10px;
-    width: 300px;
+    width: 350px;
     border: 1px solid #00FFFF;
     border-radius: 2px;
     opacity: 0;
@@ -51,11 +51,14 @@ canvas{
 #stats{
     position: relative;
 }
+.slider-collect{
+    display:inline-block;
+    padding-right: 15px;
+}
 .slider-wrap{
     position: relative;
-    width: 150px;
+    width: 160px;
 }
-
 /* The slider itself */
 .slider {
     /* position: absolute;
@@ -88,19 +91,23 @@ canvas{
     margin: 0;
     padding: 0;
     background: rgba(0,0,0,0);
+    cursor:default;
 }
 /* Mouse-over effects */
-.slider:hover {
-    opacity: 1; /* Fully shown on mouse-over */
-}
 
 .slider-wrap .m-l{
     position: absolute; 
     left: 0;
     top: 5px;
     z-index: 99;
-    opacity: .8;
+    cursor:default;
 }
+.slider-wrap:hover *{
+    opacity: 1
+}
+
+.o8{ opacity: .8}
+.o5{ opacity: .5}
 
 .col-0{
     color: #DDDDFF;

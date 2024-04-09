@@ -309,8 +309,12 @@ function testMass(){
 
 
 function genSlider(i){
-	$("setter").innerHTML += `<div class="slider-wrap"><span class = "m-l l col-${i%3}">m<sub>${i+1}</sub></span><input type="range" min="0.1" max="9.9" step = "0.1" value="1" class="slider" id="input-s-${i}"><span id = "input-n-${i}" class = "number l col-${i%3}">1.0</span></div>`;
-
+	let str = "";
+	str += `<div class = "slider-collect"><div class="slider-wrap"><span class = "o8 m-l l col-${i%3}">m<sub>${i+1}</sub></span><input type="range" min="0.1" max="9.9" step = "0.1" value="1" class="slider" id="input-s-${i}"><span id = "input-n-${i}" class = "o8 number l col-${i%3}">1.0</span></div>`;
+	str += `<div class="slider-wrap"><span class = "o5 m-l l col-${i%3}">v<sub>${i+1}<sub>x</sub></sub></span><input type="range" min="-1.5" max="1.5" step = "0.1" value="${b[i].v.x}" class="slider" id="input-s-${i}x"><span id = "input-n-${i}x" class = "o5 number l col-${i%3}">${b[i].v.x >= 0 ? "+":""}${b[i].v.x.toFixed(1)}</span></div>`;
+	str += `<div class="slider-wrap"><span class = "o5 m-l l col-${i%3}">v<sub>${i+1}<sub>y</sub></sub></span><input type="range" min="-1.5" max="1.5" step = "0.1" value="${b[i].v.y}" class="slider" id="input-s-${i}y"><span id = "input-n-${i}y" class = "o5 number l col-${i%3}">${b[i].v.y >= 0 ? "+":""}${b[i].v.y.toFixed(1)}</span></div>`;
+	str += `<div class="slider-wrap"><span class = "o5 m-l l col-${i%3}">v<sub>${i+1}<sub>z</sub></sub></span><input type="range" min="-1.5" max="1.5" step = "0.1" value="${b[i].v.z}" class="slider" id="input-s-${i}z"><span id = "input-n-${i}z" class = "o5 number l col-${i%3}">${b[i].v.z >= 0 ? "+":""}${b[i].v.z.toFixed(1)}</span></div></div>`;
+	$("setter").innerHTML += str;
 }
 
 for(let i=0; i<n; i++){
@@ -318,6 +322,9 @@ for(let i=0; i<n; i++){
 }  
 for(let i=0; i<n; i++){
 	$(`input-s-${i}`).addEventListener("input", function(){ $(`input-n-${i}`).innerHTML = Number($(`input-s-${i}`).value).toFixed(1); b[i].m = Number($(`input-s-${i}`).value)});
+	$(`input-s-${i}x`).addEventListener("input", function(){ $(`input-n-${i}x`).innerHTML = (Number($(`input-s-${i}x`).value) >= 0 ? "+":"") + Number($(`input-s-${i}x`).value).toFixed(1); b[i].v.x = Number($(`input-s-${i}x`).value)});
+	$(`input-s-${i}y`).addEventListener("input", function(){ $(`input-n-${i}y`).innerHTML = (Number($(`input-s-${i}y`).value) >= 0 ? "+":"") + Number($(`input-s-${i}y`).value).toFixed(1); b[i].v.y = Number($(`input-s-${i}y`).value)});
+	$(`input-s-${i}z`).addEventListener("input", function(){ $(`input-n-${i}z`).innerHTML = (Number($(`input-s-${i}z`).value) >= 0 ? "+":"") + Number($(`input-s-${i}z`).value).toFixed(1); b[i].v.z = Number($(`input-s-${i}z`).value)});
 }  
 
 
